@@ -1,0 +1,42 @@
+# Abank - Prueba Técnica | levanta PostgreSQL + API con un solo comando:
+#   docker compose up --build
+# API:     http://localhost:8080/swagger
+# Login:   telefono 70001111 / password Abank123*
+services:
+  db:
+    image: postgres:18-alpine
+    environment:
+      POSTGRES_DB: abank_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    # Los scripts de ./abank-prueba-tecnica-db se ejecutan en orden (01, 02)
+    # solo la primera vez que se inicializa el volumen de datos.
+    volumes:
+      - ./abank-prueba-tecnica-db:/docker-entrypoint-initdb.d:ro
+      - abank_pgdata:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d abank_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build:
+      context: ./abank-prueba-tecnica-backend
+      dockerfile: Dockerfile
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      ConnectionStrings__Default: "Host=db;Port=5432;Database=abank_db;Username=postgres;Password=postgres"
+      Jwt__Key: "3b765ca7a842c8355b9ccf5d7a736cacab49760018abde9b358d66ef5c7d2274"
+      Jwt__Issuer: "Abank.Api"
+      Jwt__Audience: "Abank.Clients"
+      Jwt__ExpirationMinutes: "60"
+    ports:
+      - "8080:8080"
+
+volumes:
+  abank_pgdata:

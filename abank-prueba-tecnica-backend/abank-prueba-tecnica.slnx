@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="Abank.Api/Abank.Api.csproj" />
+  <Folder Name="/tests/">
+    <Project Path="tests/Abank.Tests/Abank.Tests.csproj" />
+  </Folder>
+</Solution>
